@@ -1,6 +1,7 @@
 /*
     This file is a ROS 2 camera subscriber node implemented in C++. It
-    subscribes to frames from a camera on a topic.
+    subscribes to frames from a camera on a topic and displays them
+    using OpenCV.
 
     The node is defined in the Camera_Subscriber class, which inherits from
     rclcpp::Node. The constructor of this class sets up the subscriber.
@@ -35,8 +36,8 @@ using namespace std::chrono_literals;  // For using time literals like 500ms.
 
 /*
     This class creates a subscriber node that subcribes to frames from a
-    topic. It inherits the rclcpp::Node class which is the base class
-    used for all ROS 2 nodes in C++.
+    topic and displays them. It inherits the rclcpp::Node class which is
+    the base class used for all ROS 2 nodes in C++.
 
     The `this` keyword is used to refer to the instance of this class.
 */
@@ -44,8 +45,8 @@ class Camera_Subscriber : public rclcpp::Node {
     public:
         /*
             This is the constructor for the Camera_Subscriber class. It initializes
-            the node with a name and sets up the subscriber and timer to subscribe
-            to frames at defined intervals.
+            the node with a name and sets up the subscriber to get the frames from
+            the topic.
 
             This constructor is public because we will be calling it from outside
             the class to initialize the node.
