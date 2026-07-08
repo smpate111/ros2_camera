@@ -1,11 +1,11 @@
 /*
     This file is a ROS 2 camera publisher node implemented in C++. It
-    publishes images from a camerato a topic at a regular interval
+    publishes frames from a camera to a topic at a regular interval
     (this is adjustable to your needs).
 
     The node is defined in the Camera_Publisher class, which inherits from
     rclcpp::Node. The constructor of this class sets up the publisher and
-    a timer that triggers the publishing of these images.
+    a timer that triggers the publishing of these frames.
 
     The main function initializes the ROS 2 system, creates an instance of
     the Camera_Publisher class, and starts spinning to process callbacks
@@ -36,7 +36,7 @@
 using namespace std::chrono_literals;  // For using time literals like 500ms.
 
 /*
-    This class creates a publisher node that publishes images to a
+    This class creates a publisher node that publishes frames to a
     topic. It inherits the rclcpp::Node class which is the base class
     used for all ROS 2 nodes in C++.
 
@@ -47,16 +47,16 @@ class Camera_Publisher : public rclcpp::Node {
         /*
             This is the constructor for the Camera_Publisher class. It initializes
             the node with a name and sets up the publisher and timer to publish
-            images at defined intervals.
+            frames at defined intervals.
 
             This constructor is public because we will be calling it from outside
             the class to initialize the node.
         */
         Camera_Publisher() : Node("Camera_Publisher"), count_(0) {
-            // Creating a publisher that publishes images to the topic with a queue size of 20.
-            publisher_ = this->create_publisher<sensor_msgs::msg::Image>("Topic_Camera_Image", 20);
+            // Creating a publisher that publishes frames to the topic with a queue size of 20.
+            publisher_ = this->create_publisher<sensor_msgs::msg::Image>("Topic_Camera_frame", 20);
 
-            // Open the camera device and find out if it can open before sending images.
+            // Open the camera device and find out if it can open before sending frames.
             int camera_index = 0;   // Change this value to whatever index your OS assigns your camera.
             cap_.open(camera_index);
 
@@ -77,11 +77,11 @@ class Camera_Publisher : public rclcpp::Node {
                 );
             }
 
-            // This function formats and publishes images to the topic.
+            // This function formats and publishes frames to the topic.
             auto timer_callback =
                 [this]() -> void {
                     // Skip the current frame capture if the camera is not opened so
-                    // that we don't attempt to publish an image from a closed camera.
+                    // that we don't attempt to publish a frame from a closed camera.
                     if (!cap_.isOpened()) {
                         RCLCPP_WARN_THROTTLE(
                             this->get_logger(),
@@ -112,7 +112,7 @@ class Camera_Publisher : public rclcpp::Node {
                     header.stamp = this->now();
                     header.frame_id = "Camera_Frame";
 
-                    auto image_message = cv_bridge::CvImage(
+                    auto frame_message = cv_bridge::CvImage(
                         header,
                         "bgr8",
                         camera_frame
@@ -120,11 +120,11 @@ class Camera_Publisher : public rclcpp::Node {
 
                     RCLCPP_INFO(
                         this->get_logger(),
-                        "Publishing Camera Image Frame %zu.",
+                        "Publishing Camera Frame %zu.",
                         this->count_++
                     );
                     
-                    publisher_->publish(*image_message);
+                    publisher_->publish(*frame_message);
                 };
 
             // This timer calls the timer_callback function at a defined interval
