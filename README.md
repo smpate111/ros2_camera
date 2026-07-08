@@ -15,6 +15,7 @@ image_transport
 cv_bridge
 sensor_msgs
 std_msgs
+ros-jazzy-rqt-image-view
 ```
 
 To run it, enter the command into your terminal:
