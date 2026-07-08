@@ -22,7 +22,7 @@ To run it, enter the command into your terminal:
 ros2 run ros2_camera camera_pub
 ```
 
-In a new terminal, enter this command:
+In a new terminal, enter this command if you want to display the frames:
 ```
 ros2 run ros2_camera camera_sub
 ```
