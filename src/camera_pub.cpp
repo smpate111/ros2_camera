@@ -54,7 +54,7 @@ class Camera_Publisher : public rclcpp::Node {
         */
         Camera_Publisher() : Node("Camera_Publisher"), count_(0) {
             // Creating a publisher that publishes frames to the topic with a queue size of 20.
-            publisher_ = this->create_publisher<sensor_msgs::msg::Image>("Topic_Camera_frame", 20);
+            publisher_ = this->create_publisher<sensor_msgs::msg::Image>("Topic_Camera_Frame", 20);
 
             // Open the camera device and find out if it can open before sending frames.
             int camera_index = 0;   // Change this value to whatever index your OS assigns your camera.
