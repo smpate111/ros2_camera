@@ -15,10 +15,12 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 add_executable(camera_pub src/camera_pub.cpp)
+add_executable(camera_sub src/camera_sub.cpp)
 ament_target_dependencies(camera_pub cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
+ament_target_dependencies(camera_sub cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
 
 install(
-  TARGETS camera_pub
+  TARGETS camera_pub camera_sub
   DESTINATION lib/${PROJECT_NAME}
 )
 

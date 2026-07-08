@@ -3,7 +3,7 @@
 <package format="3">
   <name>ros2_camera</name>
   <version>0.0.0</version>
-  <description>Camera publisher node in C++ using OpenCV</description>
+  <description>Camera publisher and subscriber nodes in C++ using OpenCV</description>
   <maintainer email="sahilp7035@gmail.com">smpate111</maintainer>
   <license>Apache-2.0</license>
 

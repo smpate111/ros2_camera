@@ -15,7 +15,6 @@ image_transport
 cv_bridge
 sensor_msgs
 std_msgs
-ros-jazzy-rqt-image-view
 ```
 
 To run it, enter the command into your terminal:
@@ -23,7 +22,7 @@ To run it, enter the command into your terminal:
 ros2 run ros2_camera camera_pub
 ```
 
-To view the camera images, run this command in a new terminal (the camera topic will be in the dropdown in the top-left corner after you hit refresh):
+In a new terminal, enter this command:
 ```
-ros2 run rqt_image_view rqt_image_view
+ros2 run ros2_camera camera_sub
 ```
