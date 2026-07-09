@@ -56,10 +56,38 @@ class Camera_Publisher : public rclcpp::Node {
             // Creating a publisher that publishes frames to the topic with a queue size of 20.
             publisher_ = this->create_publisher<sensor_msgs::msg::Image>("Topic_Camera_Frame", 20);
 
-            // Open the camera device and find out if it can open before sending frames.
-            int camera_index = 0;   // Change this value to whatever index your OS assigns your camera.
+            // Open camera before doing anything else
+            bool is_camera_open = open_camera();
+            if (is_camera_open == false) {
+                return;
+            }
+
+            // This timer calls the timer_callback function at a defined interval.
+            timer_ =
+                this->create_wall_timer(
+                    25ms,
+                    std::bind(
+                        &Camera_Publisher::timer_callback,
+                        this
+                    )
+                );
+        }
+    
+    private:
+        // Declare these variables as private members
+        // because they are only used inside this class.
+        rclcpp::TimerBase::SharedPtr timer_;
+        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
+        size_t count_;
+        cv::VideoCapture cap_;
+        cv::Mat camera_frame;
+        int camera_index = 0;   // Change this value to whatever index your OS assigns your camera.
+
+        // Open the camera and find out if it can open before sending frames.
+        bool open_camera() {
             cap_.open(camera_index);
 
+            // Don't execute camera capture if camera is not open.
             if (!cap_.isOpened()) {
                 RCLCPP_ERROR(
                     this->get_logger(),
@@ -67,77 +95,90 @@ class Camera_Publisher : public rclcpp::Node {
                     camera_index
                 );
 
+                return false;
+            }
+
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Success: Camera with index %d opened.",
+                camera_index
+            );
+
+            return true;
+        }
+
+        /*
+            This function captures and publishes frames to a topic
+            at a defined interval.
+        */
+        void timer_callback() {
+            bool is_frame_captured = capture_frame();
+            if (is_frame_captured == false) {
                 return;
             }
-            else {
-                RCLCPP_INFO(
+
+            publish_frame();
+
+            return;
+        }
+
+        /*
+            This function captures a frame from the camera. It checks
+            if the camera is open and the frame is not empty before
+            it gets published to the topic.
+        */
+        bool capture_frame() {
+            // Skip capturing frame if camera is closed.
+            if (!cap_.isOpened()) {
+                RCLCPP_WARN_THROTTLE(
                     this->get_logger(),
-                    "Success: Camera with index %d opened.",
-                    camera_index
+                    *this->get_clock(),
+                    2000,
+                    "Camera is not opened. Skipping current frame capture."
                 );
+
+                return false;
             }
 
-            // This function formats and publishes frames to the topic.
-            auto timer_callback =
-                [this]() -> void {
-                    // Skip the current frame capture if the camera is not opened so
-                    // that we don't attempt to publish a frame from a closed camera.
-                    if (!cap_.isOpened()) {
-                        RCLCPP_WARN_THROTTLE(
-                            this->get_logger(),
-                            *this->get_clock(),
-                            2000,
-                            "Camera is not opened. Skipping current frame capture."
-                        );
+            // Capture camera frame.
+            cap_ >> camera_frame;
 
-                        return;
-                    }
+            // Skip current frame if it is empty.
+            if (camera_frame.empty()) {
+                RCLCPP_WARN(
+                    this->get_logger(),
+                    "Warning: Captured empty frame from the camera. Skipping current frame."
+                );
 
-                    // Capture the camera frame and check if it is empty before
-                    // publishing it to the topic.
-                    cv::Mat camera_frame;
-                    cap_ >> camera_frame;
+                return false;
+            }
 
-                    if (camera_frame.empty()) {
-                        RCLCPP_WARN(
-                            this->get_logger(),
-                            "Warning: Captured empty frame from the camera. Skipping current frame."
-                        );
-
-                        return;
-                    }
-
-                    // Publish the camera frame to the topic.
-                    std_msgs::msg::Header header;
-                    header.stamp = this->now();
-                    header.frame_id = "Camera_Frame";
-
-                    auto frame_message = cv_bridge::CvImage(
-                        header,
-                        "bgr8",
-                        camera_frame
-                    ).toImageMsg();
-
-                    RCLCPP_INFO(
-                        this->get_logger(),
-                        "Publishing Camera Frame %zu.",
-                        this->count_++
-                    );
-                    
-                    publisher_->publish(*frame_message);
-                };
-
-            // This timer calls the timer_callback function at a defined interval
-            timer_ = this->create_wall_timer(25ms, timer_callback);
+            return true;
         }
-    
-    private:
-        // Declare the timer, publisher, counter, and capture variables as private members
-        // because they are only used inside this class.
-        rclcpp::TimerBase::SharedPtr timer_;
-        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
-        size_t count_;
-        cv::VideoCapture cap_;
+
+        /*
+            This function publishes the captured frame to a topic.
+        */
+        void publish_frame() {
+            std_msgs::msg::Header header;
+            header.stamp = this->now();
+            header.frame_id = "Camera_Frame";
+
+            auto frame_message = cv_bridge::CvImage(
+                header,
+                "bgr8",
+                camera_frame
+            ).toImageMsg();
+
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Publishing Camera Frame %zu.",
+                this->count_++
+            );
+            
+            publisher_->publish(*frame_message);
+            return;
+        }
 };
 
 int main (int argc, char * argv[]) {
