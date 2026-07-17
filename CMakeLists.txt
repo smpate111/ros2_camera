@@ -14,10 +14,35 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(camera_pub src/camera_pub.cpp)
-add_executable(camera_sub src/camera_sub.cpp)
+# create libraries
+add_library(camera_pub_library src/camera_pub.cpp)
+add_library(camera_sub_library src/camera_sub.cpp)
+
+target_include_directories(
+  camera_pub_library PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(
+  camera_sub_library PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(camera_pub_library cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
+ament_target_dependencies(camera_sub_library cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
+
+# create executables
+add_executable(camera_pub src/camera_pub_node.cpp)
+add_executable(camera_sub src/camera_sub_node.cpp)
+
 ament_target_dependencies(camera_pub cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
 ament_target_dependencies(camera_sub cv_bridge image_transport OpenCV rclcpp sensor_msgs std_msgs)
+
+# link executables to libraries
+target_link_libraries(camera_pub camera_pub_library)
+target_link_libraries(camera_sub camera_sub_library)
 
 install(
   TARGETS camera_pub camera_sub
